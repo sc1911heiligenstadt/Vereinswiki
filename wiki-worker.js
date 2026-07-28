@@ -12,16 +12,11 @@
 // https://vereinswiki.<subdomain>.workers.dev lauten (in db.js als
 // WIKI_WORKER_URL eingetragen — bei abweichender Subdomain dort anpassen).
 //
-// Secrets (Settings -> Variables and Secrets -> Add):
-//   GEMINI_API_KEY      = <Key aus Google AI Studio, kostenloser Tier genügt>
-//   USAGE_INGEST_SECRET = <dasselbe Geheimnis wie im Worker "api-dashboard">
-//                         optional: fehlt es, wird nur nicht gezaehlt.
+// Secret (Settings -> Variables and Secrets -> Add):
+//   GEMINI_API_KEY = <Key aus Google AI Studio, kostenloser Tier genügt>
 //
-// WICHTIG - Service Bindings (Settings -> Bindings -> Add -> Service binding):
+// WICHTIG - Service Binding (Settings -> Bindings -> Add -> Service binding):
 //   Variablenname: GATEWAY, Service: landingpage, Environment: production.
-//   Variablenname: USAGE,   Service: api-dashboard, Environment: production.
-//     (optional; meldet den Gemini-Token-Verbrauch ans Dashboard, weil Google
-//      fuer die Generative Language API keinen Verbrauchs-Endpunkt anbietet)
 //   Noetig, weil Cloudflare einem Worker einen direkten fetch() auf die
 //   *.workers.dev-Adresse eines ANDEREN Workers verweigert (Error 1042,
 //   Loop-Schutz) - ein Service Binding umgeht den oeffentlichen Netzwerkpfad
@@ -108,43 +103,11 @@ async function askGemini(env, docs, question) {
   const data = await res.json();
   const answer = (data.candidates?.[0]?.content?.parts || []).map((p) => p.text).filter(Boolean).join("");
   if (!answer) throw new Error("Der Assistent hat keine Antwort geliefert (evtl. wegen einer Inhaltssperre oder eines leeren Dokuments).");
-  // usageMetadata liegt jeder Gemini-Antwort bei und wurde bisher verworfen.
-  // Google bietet fuer die Generative Language API keinen Verbrauchs-Endpunkt
-  // an -- das hier ist die einzige Stelle, an der die Zahlen ueberhaupt zu
-  // bekommen sind.
-  return { answer, usage: data.usageMetadata || null };
-}
-
-// Meldet den Token-Verbrauch ans API-Dashboard. Laeuft ueber ein Service
-// Binding, weil ein direkter fetch() auf einen anderen Worker an Error 1042
-// scheitert -- und traegt zusaetzlich ein Geheimnis, weil die Dashboard-URL
-// oeffentlich erreichbar ist.
-//
-// Der Aufrufer haengt das in ctx.waitUntil(): die Antwort an den Nutzer darf
-// NICHT auf die Meldung warten, und eine fehlgeschlagene Zaehlung darf eine
-// gelungene Wiki-Antwort nie kippen.
-async function meldeNutzung(env, usage) {
-  if (!env.USAGE || !env.USAGE_INGEST_SECRET) return;
-  try {
-    await env.USAGE.fetch("https://api-dashboard.michel-brunner.workers.dev", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "usage-melden",
-        secret: env.USAGE_INGEST_SECRET,
-        quelle: "gemini-vereinswiki",
-        calls: 1,
-        promptTokens: Number(usage?.promptTokenCount) || 0,
-        outputTokens: Number(usage?.candidatesTokenCount) || 0
-      })
-    });
-  } catch (e) {
-    console.warn("Nutzungsmeldung fehlgeschlagen:", e.message);
-  }
+  return answer;
 }
 
 export default {
-  async fetch(request, env, ctx) {
+  async fetch(request, env) {
     const origin = request.headers.get("Origin") || "";
     const cors = corsHeaders(origin);
 
@@ -200,8 +163,7 @@ export default {
       }
 
       // 3. Gemini fragen.
-      const { answer, usage } = await askGemini(env, docs, question);
-      ctx.waitUntil(meldeNutzung(env, usage));
+      const answer = await askGemini(env, docs, question);
       return json({ answer, dokumentAnzahl: docs.length }, 200, cors);
     } catch (e) {
       return json({ error: e.message || "Interner Fehler." }, 500, cors);
