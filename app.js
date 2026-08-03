@@ -173,11 +173,6 @@ function setupNav() {
   document.querySelectorAll("nav button").forEach((btn) => {
     btn.addEventListener("click", () => switchTab(btn.dataset.tab));
   });
-  const badge = document.getElementById("version-badge");
-  badge.addEventListener("click", () => switchTab("info"));
-  badge.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); switchTab("info"); }
-  });
 }
 
 function switchTab(tab) {
