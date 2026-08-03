@@ -31,7 +31,8 @@ const MAX_TOTAL_BYTES = 18 * 1024 * 1024;
 
 const ALLOWED_ORIGINS = [
   "http://localhost:8784",      // Vereinswiki (Dev-Server)
-  "https://tecko1985.github.io"
+  "https://sc1911heiligenstadt.github.io",
+  "https://tecko1985.github.io" // alte Adresse bis 2026-08: PWAs mit eigenem SW-Cache laufen dort noch
 ];
 
 function corsHeaders(origin) {

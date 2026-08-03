@@ -11,7 +11,7 @@
 //      dort als Secret, nie im Browser.
 //
 // Das Login-Token stammt aus der Tools-Übersicht (gleiche Origin
-// tecko1985.github.io) und wird aus localStorage wiederverwendet.
+// sc1911heiligenstadt.github.io) und wird aus localStorage wiederverwendet.
 const GATEWAY_URL = "https://landingpage.michel-brunner.workers.dev";
 const WIKI_WORKER_URL = "https://vereinswiki.michel-brunner.workers.dev";
 const TOKEN_STORAGE_KEY = "tu_session_token";
