@@ -29,7 +29,9 @@ Browser (GitHub Pages, Vanilla JS, Login-Token aus Tools-Übersicht)
 
 - `index.html` / `app.js` / `db.js` / `config.js` / `style.css` – Frontend
 - `wiki-worker.js` – Cloudflare-Worker (Gemini). Separat deployen, nicht Teil der Pages-Site.
-- `logo.png` – Vereinswappen
+Das Vereinswappen liegt nicht mehr hier: `index.html` lädt es als Vektor vom
+Wurzelverzeichnis (`https://sc1911heiligenstadt.github.io/logo.svg`), wie die
+ganze Flotte.
 
 ## Deploy / Inbetriebnahme (einmalig)
 
