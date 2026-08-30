@@ -2,6 +2,19 @@ const APP_VERSION = "1.0";
 
 const APP_CHANGELOG = [
   {
+    version: "1.3",
+    groups: [
+      {
+        title: "Der Datenschutz-Hinweis sagt jetzt, dass deine Frage den Verein verlässt",
+        items: [
+          "Dort stand bisher nur, dass die Daten auf Servern in Deutschland liegen. Das stimmte für die gespeicherten Unterlagen — nicht für die Frage selbst: die geht zusammen mit den hinterlegten Dokumenten an einen KI-Dienst von Google, sonst gäbe es keine Antwort.",
+          "Der Hinweis sagt das jetzt offen, samt der Bitte, keine Namen und keine persönlichen Angaben in die Frage zu schreiben.",
+          "An der Funktion ändert sich nichts — nur der Text war ungenau."
+        ]
+      }
+    ]
+  },
+  {
     version: "1.2",
     groups: [
       {
