@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>📚 Toolbox Wiki</title>
 <meta name="theme-color" content="#1a56a0" />
-<link rel="stylesheet" href="style.css?v=1.4" />
+<link rel="stylesheet" href="style.css?v=1.5" />
 </head>
 <body>
 
@@ -39,6 +39,7 @@
   <nav>
     <button data-tab="fragen" class="active">Fragen</button>
     <button data-tab="dokumente">Dokumente</button>
+    <button data-tab="verlauf">Gestellte Fragen</button>
     <div class="nav-right">
       <button data-tab="einstellungen">Einstellungen</button>
       <button data-tab="info">Info</button>
@@ -59,6 +60,7 @@
         <div class="btn-row" style="justify-content:flex-start; margin-top:12px;">
           <button class="btn" id="btn-fragen" type="button">Fragen</button>
         </div>
+        <p class="muted" style="margin-top:12px;">Gestellte Fragen werden mit Namen und Zeitpunkt festgehalten, damit erkennbar ist, welche Unterlagen im Wiki noch fehlen. Einsehen können das nur Nutzer mit Bearbeiten-Recht.</p>
       </div>
 
       <div class="card answer-card" id="antwort-card" style="display:none;">
@@ -103,6 +105,28 @@
       </div>
     </section>
 
+    <!-- Gestellte Fragen (nur mit Bearbeiten-Recht) -->
+    <section class="tab-section" id="tab-verlauf">
+      <div class="card">
+        <h2 style="margin-bottom:6px;">Gestellte Fragen</h2>
+        <p class="muted" style="margin-bottom:14px;">
+          Jede Frage an das Toolbox Wiki — auch die aus dem Reiter „Feedback &amp; Hilfe“ der Tools-Übersicht.
+          Eine Frage, die keine Antwort fand, ist ein Hinweis auf ein fehlendes Dokument.
+        </p>
+        <div class="verlauf-toolbar">
+          <input type="search" id="verlauf-suche" placeholder="Fragen durchsuchen …" />
+          <button class="btn secondary small" id="btn-verlauf-neu" type="button">Aktualisieren</button>
+          <button class="btn danger small" id="btn-verlauf-leeren" type="button">Alles löschen</button>
+        </div>
+        <p class="muted" id="verlauf-status" style="margin-top:10px;"></p>
+      </div>
+
+      <div class="card">
+        <div class="empty-state" id="verlauf-empty">Noch keine Fragen protokolliert.</div>
+        <div id="verlauf-rows"></div>
+      </div>
+    </section>
+
     <!-- Info -->
     <section class="tab-section" id="tab-info">
       <div class="card">
@@ -121,7 +145,9 @@
       <div class="card" id="ds-info-karte">
         <h2>Datenschutz</h2>
         <p>Dieses Werkzeug gehört zu den internen Anwendungen des
-        1. SC 1911 Heiligenstadt. Die hier erfassten Daten werden
+        1. SC 1911 Heiligenstadt. Gestellte Fragen werden mit Name und Zeitpunkt
+        protokolliert, um die hinterlegten Unterlagen zu verbessern; einsehen und
+        löschen können das nur Nutzer mit Bearbeiten-Recht. Die hier erfassten Daten werden
         ausschließlich für die Vereinsarbeit verwendet und liegen auf Servern
         in Deutschland, die ein Auftragsverarbeiter für den Verein betreibt.
         Eine Weitergabe an Dritte findet nur statt, soweit sie für den
@@ -154,8 +180,8 @@
   </main>
 </div>
 
-<script src="config.js?v=1.4"></script>
-<script src="db.js?v=1.2"></script>
-<script src="app.js?v=1.4"></script>
+<script src="config.js?v=1.5"></script>
+<script src="db.js?v=1.3"></script>
+<script src="app.js?v=1.5"></script>
 </body>
 </html>

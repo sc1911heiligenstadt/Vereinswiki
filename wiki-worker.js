@@ -7,6 +7,11 @@
 // und schickt Dokumente + Frage an Google Gemini. Der Gemini-Key liegt NUR hier
 // als Secret, nie im Browser. Nextcloud-Zugangsdaten braucht dieser Worker nicht.
 //
+// Jede Frage wird zusätzlich ins Protokoll geschrieben (Gateway-Aktion
+// wiki-frage-log), damit die Bearbeiter im Tab "Gestellte Fragen" sehen, wonach
+// gesucht wird — und welche Frage keine Antwort fand. Das läuft per
+// ctx.waitUntil nebenher: schlägt es fehl, merkt der Fragende davon nichts.
+//
 // Deploy: dash.cloudflare.com -> Workers & Pages -> Worker "vereinswiki" ->
 // diesen Code einfügen -> Deploy. Die Worker-URL sollte
 // https://vereinswiki.<subdomain>.workers.dev lauten (in db.js als
@@ -59,6 +64,18 @@ function gateway(env, action, payload, token) {
   });
 }
 
+// Schreibt die gestellte Frage ins Protokoll des Gateways (Aktion
+// wiki-frage-log, Datei vereinswiki-fragen.json). Läuft mit dem Token des
+// Fragenden, damit im Protokoll der echte Name steht.
+//
+// Bewusst "abschicken und vergessen": das Protokoll ist Beiwerk und darf die
+// Antwort weder verzögern noch scheitern lassen. ctx.waitUntil hält den Worker
+// dafür am Leben, nachdem die Antwort schon beim Browser ist.
+function protokolliereFrage(env, token, ctx, eintrag) {
+  const lauf = gateway(env, "wiki-frage-log", eintrag, token).catch(() => {});
+  if (ctx && typeof ctx.waitUntil === "function") ctx.waitUntil(lauf);
+}
+
 function arrayBufferToBase64(buf) {
   const bytes = new Uint8Array(buf);
   let binary = "";
@@ -108,7 +125,7 @@ async function askGemini(env, docs, question) {
 }
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const origin = request.headers.get("Origin") || "";
     const cors = corsHeaders(origin);
 
@@ -138,6 +155,7 @@ export default {
       const listBody = await listResp.json();
       const dokumente = (listBody.data && Array.isArray(listBody.data.dokumente)) ? listBody.data.dokumente : [];
       if (dokumente.length === 0) {
+        protokolliereFrage(env, token, ctx, { frage: question, dokumentAnzahl: 0, status: "fehler", fehler: "Keine Dokumente hinterlegt" });
         return json({ answer: "Es sind noch keine Dokumente hinterlegt, auf deren Basis ich antworten könnte.", dokumentAnzahl: 0 }, 200, cors);
       }
 
@@ -151,6 +169,7 @@ export default {
         const buf = await fileResp.arrayBuffer();
         total += buf.byteLength;
         if (total > MAX_TOTAL_BYTES) {
+          protokolliereFrage(env, token, ctx, { frage: question, dokumentAnzahl: docs.length, status: "fehler", fehler: "Dokumente zusammen zu groß" });
           return json({ error: "Die hinterlegten Dokumente sind zusammen zu groß für eine Anfrage. Bitte weniger oder kleinere Dokumente hinterlegen." }, 413, cors);
         }
         if ((d.contentType || "").includes("pdf")) {
@@ -160,13 +179,16 @@ export default {
         }
       }
       if (docs.length === 0) {
+        protokolliereFrage(env, token, ctx, { frage: question, dokumentAnzahl: 0, status: "fehler", fehler: "Dokumente nicht lesbar" });
         return json({ error: "Die hinterlegten Dokumente konnten nicht gelesen werden." }, 502, cors);
       }
 
       // 3. Gemini fragen.
       const answer = await askGemini(env, docs, question);
+      protokolliereFrage(env, token, ctx, { frage: question, dokumentAnzahl: docs.length, status: "ok" });
       return json({ answer, dokumentAnzahl: docs.length }, 200, cors);
     } catch (e) {
+      protokolliereFrage(env, token, ctx, { frage: question, status: "fehler", fehler: e.message || "Interner Fehler." });
       return json({ error: e.message || "Interner Fehler." }, 500, cors);
     }
   }

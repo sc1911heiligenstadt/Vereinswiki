@@ -1,5 +1,6 @@
 let appData = { dokumente: [] };
 let currentUser = null; // { username, displayName }
+let verlaufFragen = null; // null = noch nicht geladen, sonst Array (neueste zuerst)
 
 const MAX_FILE_BYTES = 10 * 1024 * 1024; // Gateway-Grenze (dav-file-put)
 
@@ -81,6 +82,7 @@ async function init() {
   setupNav();
   setupFragen();
   setupDokumente();
+  setupVerlauf();
 
   if (getSessionToken()) {
     try {
@@ -159,6 +161,12 @@ function applyAdminTabs() {
   // Einstellungen-Tab (Speicherort) = Administrieren-Ebene (2026-07-24): nur für Admins sichtbar.
   const el = document.querySelector('nav button[data-tab="einstellungen"]');
   if (el) el.style.display = canAdmin() ? "" : "none";
+  // "Gestellte Fragen" zeigt, WER was gefragt hat — Bearbeiten-Ebene. Das
+  // Ausblenden ist nur die Oberfläche; zurückgehalten wird serverseitig
+  // (wiki-fragen-list prüft resolveEditPermission), ein Nur-Seher bekommt dort
+  // 403 statt Daten.
+  const v = document.querySelector('nav button[data-tab="verlauf"]');
+  if (v) v.style.display = canEdit() ? "" : "none";
 }
 
 function renderUploadPermission() {
@@ -179,6 +187,9 @@ function switchTab(tab) {
   document.querySelectorAll("nav button").forEach((b) => b.classList.toggle("active", b.dataset.tab === tab));
   document.querySelectorAll(".tab-section").forEach((s) => s.classList.toggle("active", s.id === "tab-" + tab));
   if (tab === "info") renderVersionInfo();
+  // Erst beim Öffnen laden: das Protokoll interessiert nur wenige, jeder
+  // Seitenaufruf soll es nicht mitschleppen.
+  if (tab === "verlauf" && verlaufFragen === null) ladeVerlauf();
 }
 
 function renderVersionInfo() {
@@ -242,6 +253,9 @@ async function handleFrage() {
     }
   } finally {
     btn.disabled = false;
+    // Der Worker hat diese Frage gerade protokolliert — der zwischengespeicherte
+    // Verlauf ist damit veraltet und wird beim nächsten Öffnen neu geholt.
+    verlaufFragen = null;
   }
 }
 
@@ -387,6 +401,107 @@ function renderDokumente() {
 
   document.querySelectorAll("[data-view-id]").forEach((b) => b.addEventListener("click", () => handleView(b.dataset.viewId)));
   document.querySelectorAll("[data-delete-id]").forEach((b) => b.addEventListener("click", () => handleDelete(b.dataset.deleteId)));
+}
+
+// ---------- Gestellte Fragen (Protokoll) ----------
+
+function setupVerlauf() {
+  document.getElementById("btn-verlauf-neu").addEventListener("click", () => ladeVerlauf());
+  document.getElementById("btn-verlauf-leeren").addEventListener("click", handleVerlaufLeeren);
+  document.getElementById("verlauf-suche").addEventListener("input", renderVerlauf);
+}
+
+function setVerlaufStatus(text) {
+  document.getElementById("verlauf-status").textContent = text || "";
+}
+
+async function ladeVerlauf() {
+  if (!canEdit()) return;
+  setVerlaufStatus("Lade …");
+  try {
+    const res = await gatewayFragenLoad();
+    verlaufFragen = res.fragen;
+    const n = verlaufFragen.length;
+    setVerlaufStatus(n === 0
+      ? "Noch keine Frage protokolliert."
+      : `${n} Frage${n === 1 ? "" : "n"} protokolliert${res.max ? ` (die letzten ${res.max} werden aufgehoben)` : ""}.`);
+  } catch (e) {
+    verlaufFragen = [];
+    setVerlaufStatus(e instanceof NotLoggedInError
+      ? "Sitzung abgelaufen – bitte in der Tools-Übersicht neu anmelden."
+      : "Der Verlauf konnte nicht geladen werden: " + e.message);
+  }
+  renderVerlauf();
+}
+
+async function handleVerlaufLeeren() {
+  if (!canEdit()) return;
+  const n = (verlaufFragen || []).length;
+  if (!n) { setVerlaufStatus("Es ist nichts zu löschen."); return; }
+  if (!confirm(`Wirklich alle ${n} protokollierten Fragen löschen? Das lässt sich nicht rückgängig machen.`)) return;
+  try {
+    await gatewayFragenLeeren();
+    verlaufFragen = [];
+    setVerlaufStatus("Verlauf gelöscht.");
+  } catch (e) {
+    setVerlaufStatus("Löschen fehlgeschlagen: " + e.message);
+  }
+  renderVerlauf();
+}
+
+async function handleFrageLoeschen(id) {
+  if (!canEdit()) return;
+  if (!confirm("Diese Frage aus dem Verlauf löschen?")) return;
+  try {
+    await gatewayFrageLoeschen(id);
+    verlaufFragen = (verlaufFragen || []).filter((f) => f.id !== id);
+    setVerlaufStatus("Frage gelöscht.");
+  } catch (e) {
+    setVerlaufStatus("Löschen fehlgeschlagen: " + e.message);
+  }
+  renderVerlauf();
+}
+
+function renderVerlauf() {
+  const rowsEl = document.getElementById("verlauf-rows");
+  const emptyEl = document.getElementById("verlauf-empty");
+  const alle = verlaufFragen || [];
+  const suche = (document.getElementById("verlauf-suche").value || "").trim().toLowerCase();
+  // Gesucht wird über Frage UND Name — "wer hat eigentlich nach der Satzung
+  // gefragt" ist genauso ein Anlass wie "was wurde zur Satzung gefragt".
+  const rows = suche
+    ? alle.filter((f) => `${f.frage || ""} ${f.wer || ""}`.toLowerCase().includes(suche))
+    : alle;
+
+  emptyEl.style.display = rows.length ? "none" : "block";
+  emptyEl.textContent = alle.length && !rows.length
+    ? "Keine Frage passt zur Suche."
+    : "Noch keine Fragen protokolliert.";
+
+  rowsEl.innerHTML = rows.map((f) => {
+    const fehler = f.status === "fehler";
+    const detail = fehler
+      ? `Keine Antwort${f.fehler ? ": " + escapeHtml(f.fehler) : ""}`
+      : (typeof f.dokumentAnzahl === "number"
+        ? `Beantwortet aus ${f.dokumentAnzahl} Dokument${f.dokumentAnzahl === 1 ? "" : "en"}`
+        : "Beantwortet");
+    return `
+    <div class="frage-row${fehler ? " fehler" : ""}">
+      <div class="frage-kopf">
+        <span class="frage-wer">${escapeHtml(f.wer || f.username || "Unbekannt")}</span>
+        <span class="muted">${escapeHtml(formatDateTime(f.wann))}</span>
+      </div>
+      <div class="frage-text">${escapeHtml(f.frage || "")}</div>
+      <div class="frage-fuss">
+        <span class="muted">${detail}</span>
+        <button class="btn secondary small" type="button" data-frage-id="${escapeHtml(f.id)}">Löschen</button>
+      </div>
+    </div>`;
+  }).join("");
+
+  rowsEl.querySelectorAll("[data-frage-id]").forEach((b) => {
+    b.addEventListener("click", () => handleFrageLoeschen(b.dataset.frageId));
+  });
 }
 
 // ---------- Start ----------

@@ -2,6 +2,28 @@ const APP_VERSION = "1.0";
 
 const APP_CHANGELOG = [
   {
+    version: "1.2",
+    groups: [
+      {
+        title: "Neuer Reiter „Gestellte Fragen“",
+        items: [
+          "Alle an das Wiki gestellten Fragen stehen jetzt in einem eigenen Reiter — mit Name, Zeitpunkt und der Angabe, ob eine Antwort gefunden wurde.",
+          "Fragen ohne Antwort sind besonders markiert: sie zeigen, welche Unterlage im Wiki noch fehlt.",
+          "Mitgeschrieben werden auch die Fragen, die über den Reiter „Feedback & Hilfe“ der Tools-Übersicht gestellt werden.",
+          "Ein Suchfeld durchsucht Fragen und Namen. Einzelne Einträge oder der ganze Verlauf lassen sich löschen.",
+          "Aufgehoben werden die letzten 500 Fragen; ältere fallen automatisch heraus."
+        ]
+      },
+      {
+        title: "Wer darf was",
+        items: [
+          "Den Reiter sehen und den Verlauf löschen darf nur, wer Bearbeiten-Recht für das Toolbox Wiki hat — geprüft wird das auf dem Server, nicht nur durch Ausblenden.",
+          "Ein Hinweis unter dem Frage-Feld sagt jedem, dass seine Frage mit Namen festgehalten wird."
+        ]
+      }
+    ]
+  },
+  {
     version: "1.1",
     groups: [
       {

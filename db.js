@@ -112,6 +112,32 @@ async function gatewayFileBlob(id) {
   return resp.blob();
 }
 
+// ---------- Frageprotokoll ----------
+//
+// Wer eine Frage stellt, landet damit im Protokoll (das schreibt der
+// wiki-worker selbst, nicht der Browser). Lesen und Löschen darf nur, wer
+// Bearbeiten-Recht für das Toolbox Wiki hat — die Prüfung sitzt im Gateway,
+// das Ausblenden des Reiters ist nur die Oberfläche dazu.
+
+// Alle protokollierten Fragen holen, neueste zuerst.
+async function gatewayFragenLoad() {
+  const body = await gatewayRequest({ action: "wiki-fragen-list", app: GATEWAY_APP_ID });
+  return {
+    fragen: Array.isArray(body.fragen) ? body.fragen : [],
+    max: typeof body.max === "number" ? body.max : null
+  };
+}
+
+// Eine einzelne Frage aus dem Protokoll entfernen.
+async function gatewayFrageLoeschen(id) {
+  await gatewayRequest({ action: "wiki-fragen-loeschen", app: GATEWAY_APP_ID, id });
+}
+
+// Das ganze Protokoll leeren.
+async function gatewayFragenLeeren() {
+  await gatewayRequest({ action: "wiki-fragen-loeschen", app: GATEWAY_APP_ID, alle: true });
+}
+
 // Eine Frage an den Wissens-Worker (Gemini) stellen. Der Worker holt die
 // Dokumente selbst übers Gateway (mit demselben Token) und antwortet auf Basis
 // des Inhalts. Rückgabe: { answer, dokumentAnzahl }.

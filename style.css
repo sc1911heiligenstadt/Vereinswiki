@@ -217,6 +217,35 @@ button.btn:disabled { opacity: 0.6; cursor: default; }
   .dok-row > span:nth-child(2), .dok-row > span:nth-child(3) { display: none; }
 }
 
+/* ---------- Gestellte Fragen (Protokoll) ---------- */
+
+.verlauf-toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+/* min-width statt fester Breite: sonst sprengt das Suchfeld die Zeile am Handy. */
+.verlauf-toolbar input[type="search"] {
+  flex: 1 1 200px;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.frage-row {
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--blue);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+}
+.frage-row.fehler { border-left-color: var(--gold); background: var(--gold-light); }
+.frage-kopf { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; margin-bottom: 6px; }
+.frage-wer { font-weight: 700; font-size: 14px; }
+/* Eine getippte Frage kann ein einziges sehr langes Wort sein (Link, Dateiname) —
+   ohne den Umbruch schiebt sie die Karte über den rechten Rand hinaus. */
+.frage-text { font-size: 15px; line-height: 1.5; overflow-wrap: anywhere; }
+.frage-fuss { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-top: 10px; }
+
 /* Rechte Nav-Gruppe (Einstellungen/Verwaltung + Info). Das margin haengt
    am Wrapper, damit die Gruppe rechts bleibt, auch wenn einzelne Buttons
    fuer Nicht-Admins ausgeblendet sind. */
