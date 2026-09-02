@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>📚 Toolbox Wiki</title>
+<meta name="theme-color" content="#1a56a0" />
+<link rel="stylesheet" href="style.css?v=1.0" />
+</head>
+<body>
+
+<header>
+  <h1>📚 Toolbox Wiki</h1>
+  <a href="https://sc1911heiligenstadt.github.io/ToolsUebersicht/" class="back-to-dashboard">← Zurück zum Dashboard</a>
+  <div class="header-right">
+    <div class="file-status" id="file-status"><span class="dot"></span><span class="label">Nicht verbunden</span></div>
+    <img class="header-logo" src="https://sc1911heiligenstadt.github.io/logo.svg" alt="1. SC 1911 Heiligenstadt e.V." />
+  </div>
+</header>
+
+<!-- Verbindungs-Screen -->
+<div class="connect-screen" id="connect-screen">
+  <div class="card">
+    <h2>Anmeldung erforderlich</h2>
+    <p class="muted">
+      Das Toolbox Wiki beantwortet Fragen zu den hinterlegten Vereinsunterlagen. Melde dich einmalig in der
+      <strong>Tools-Übersicht</strong> an – danach kannst du Dokumente pflegen und Fragen stellen, ganz ohne
+      Zugangsdaten auf diesem Gerät. Funktioniert auch mobil.
+    </p>
+    <div class="btn-row" style="justify-content:flex-start;">
+      <a class="btn" href="https://sc1911heiligenstadt.github.io/ToolsUebersicht/">Zur Tools-Übersicht &amp; anmelden</a>
+    </div>
+    <p class="muted" id="cloud-error" style="display:none; color:#c0392b; margin-top:12px;"></p>
+  </div>
+</div>
+
+<!-- App -->
+<div id="app-shell" style="display:none;">
+  <nav>
+    <button data-tab="fragen" class="active">Fragen</button>
+    <button data-tab="dokumente">Dokumente</button>
+    <button data-tab="verlauf">Gestellte Fragen</button>
+    <div class="nav-right">
+      <button data-tab="einstellungen">Einstellungen</button>
+      <button data-tab="info">Info</button>
+    </div>
+  </nav>
+
+  <main>
+
+    <!-- Fragen -->
+    <section class="tab-section active" id="tab-fragen">
+      <div class="card">
+        <h2 style="margin-bottom:6px;">Frage an die Vereinsunterlagen</h2>
+        <p class="muted" id="frage-hint" style="margin-bottom:14px;"></p>
+        <div class="form-field">
+          <label for="frage-input">Deine Frage</label>
+          <textarea id="frage-input" rows="3" placeholder="z. B. Was regelt die Platzordnung zum Rauchen auf dem Sportgelände?"></textarea>
+        </div>
+        <div class="btn-row" style="justify-content:flex-start; margin-top:12px;">
+          <button class="btn" id="btn-fragen" type="button">Fragen</button>
+        </div>
+        <p class="muted" style="margin-top:12px;">Gestellte Fragen werden mit Namen und Zeitpunkt festgehalten, damit erkennbar ist, welche Unterlagen im Wiki noch fehlen. Einsehen können das nur Nutzer mit Bearbeiten-Recht.</p>
+      </div>
+
+      <div class="card answer-card" id="antwort-card" style="display:none;">
+        <div class="answer-question" id="antwort-frage"></div>
+        <div class="answer-text" id="antwort-text"></div>
+        <p class="muted answer-meta" id="antwort-meta" style="margin-top:12px;"></p>
+      </div>
+    </section>
+
+    <!-- Dokumente -->
+    <section class="tab-section" id="tab-dokumente">
+      <div class="card warn-card">
+        <strong>⚠️ Nur allgemeine Vereinsunterlagen</strong>
+        <p>
+          Lade hier ausschließlich Dokumente <strong>ohne personenbezogene Daten</strong> hoch –
+          Satzung, Ordnungen, Konzepte, Leitfäden, allgemeine Regeln. <strong>Keine</strong> Mitgliederlisten,
+          Geburtsdaten, Gehälter oder Kontodaten.
+        </p>
+      </div>
+
+      <div class="card" id="upload-card">
+        <h3>Dokument hochladen</h3>
+        <p class="muted" style="margin-bottom:12px;">PDF oder Textdatei (.txt), max. 10 MB pro Datei. Mehrere Dateien gleichzeitig möglich.</p>
+        <div class="upload-row">
+          <input type="file" id="upload-input" accept=".pdf,.txt,application/pdf,text/plain" multiple />
+          <button class="btn" id="btn-upload" type="button">Hochladen</button>
+        </div>
+        <p class="muted" id="upload-status" style="margin-top:10px; display:none;"></p>
+      </div>
+      <p class="muted" id="upload-noaccess-hint" style="display:none;">Nur Admins und dafür berechtigte Nutzer können Dokumente hochladen oder löschen.</p>
+
+      <div class="card">
+        <h3>Hinterlegte Dokumente</h3>
+        <div class="empty-state" id="dok-empty">Noch keine Dokumente hinterlegt.</div>
+        <div class="dok-row-header" id="dok-header" style="display:none;">
+          <span>Dokument</span>
+          <span>Größe</span>
+          <span>Hinzugefügt</span>
+          <span></span>
+        </div>
+        <div id="dok-rows"></div>
+      </div>
+    </section>
+
+    <!-- Gestellte Fragen (nur mit Bearbeiten-Recht) -->
+    <section class="tab-section" id="tab-verlauf">
+      <div class="card">
+        <h2 style="margin-bottom:6px;">Gestellte Fragen</h2>
+        <p class="muted" style="margin-bottom:14px;">
+          Jede Frage an das Toolbox Wiki — auch die aus dem Reiter „Feedback &amp; Hilfe“ der Tools-Übersicht.
+          Eine Frage, die keine Antwort fand, ist ein Hinweis auf ein fehlendes Dokument.
+        </p>
+        <div class="verlauf-toolbar">
+          <input type="search" id="verlauf-suche" placeholder="Fragen durchsuchen …" />
+          <button class="btn secondary small" id="btn-verlauf-neu" type="button">Aktualisieren</button>
+          <button class="btn danger small" id="btn-verlauf-leeren" type="button">Alles löschen</button>
+        </div>
+        <p class="muted" id="verlauf-status" style="margin-top:10px;"></p>
+      </div>
+
+      <div class="card">
+        <div class="empty-state" id="verlauf-empty">Noch keine Fragen protokolliert.</div>
+        <div id="verlauf-rows"></div>
+      </div>
+    </section>
+
+    <!-- Info -->
+    <section class="tab-section" id="tab-info">
+      <div class="card">
+        <h2>Über das Toolbox Wiki <span class="version-badge" id="version-badge-2"></span></h2>
+        <p class="muted">
+            Stelle hier Fragen zu den Vereinsunterlagen in ganz normaler Sprache — die Antwort wird
+            auf Basis der hinterlegten Dokumente erzeugt und nennt, soweit möglich, die Quelle.
+            Steht etwas nicht in den Unterlagen, sagt der Assistent das, statt zu raten.
+            Gefragt wird also nie das offene Internet, sondern ausschließlich das, was im Reiter
+            „Dokumente“ liegt. Was neu ins Wiki soll, muss deshalb erst dort hochgeladen werden.
+          </p>
+      </div>
+      <div class="card">
+        <h2>Änderungen</h2>
+        <div id="changelog-list"></div>
+      </div>
+    
+      <div class="card" id="ds-info-karte">
+        <h2>Datenschutz</h2>
+        <p>Dieses Werkzeug gehört zu den internen Anwendungen des
+        1. SC 1911 Heiligenstadt. Gestellte Fragen werden mit Name und Zeitpunkt
+        protokolliert, um die hinterlegten Unterlagen zu verbessern; einsehen und
+        löschen können das nur Nutzer mit Bearbeiten-Recht. Die hier erfassten Daten werden
+        ausschließlich für die Vereinsarbeit verwendet und liegen auf Servern
+        in Deutschland, die ein Auftragsverarbeiter für den Verein betreibt.
+        Eine Weitergabe an Dritte findet nur statt, soweit sie für den
+        jeweiligen Zweck erforderlich oder gesetzlich vorgeschrieben ist.</p>
+        <p><strong>Damit deine Frage beantwortet werden kann, verlässt sie den
+        Verein.</strong> Sie wird zusammen mit den hinterlegten Unterlagen an einen
+        KI-Dienst von Google übermittelt und dort verarbeitet. Eine Übermittlung in
+        Länder außerhalb der EU ist dabei nicht ausgeschlossen, und Google kann die
+        Eingaben zur Verbesserung seiner eigenen Dienste verwenden. <strong>Schreib
+        deshalb keine Namen und keine persönlichen Angaben in die Frage.</strong>
+        Gespeichert wird die Frage anschließend beim Verein, wie oben beschrieben.</p>
+        <p>Verantwortlich ist der 1. SC 1911 Heiligenstadt, Leineberg 2,
+        37308 Heilbad Heiligenstadt, Telefon 03606 612206,
+        <a href="mailto:info@sc1911-heiligenstadt.de">info@sc1911-heiligenstadt.de</a>.
+        Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung,
+        Datenübertragbarkeit und Widerspruch lassen sich unter dieser
+        Anschrift geltend machen. Beschwerden nimmt der Thüringer
+        Landesbeauftragte für den Datenschutz und die Informationsfreiheit
+        entgegen.</p>
+        <p><a href="https://www.sc1911-heiligenstadt.de/datenschutz/" target="_blank" rel="noopener">Datenschutzerklärung des Vereins</a>
+        &middot;
+        <a href="https://www.sc1911-heiligenstadt.de/impressum-2/" target="_blank" rel="noopener">Impressum</a></p>
+      </div>
+</section>
+
+    <!-- Einstellungen -->
+    <section class="tab-section" id="tab-einstellungen">
+      <div class="card">
+        <h3>Speicherort</h3>
+        <p class="muted" style="margin-bottom:10px;">Verbunden mit: <strong>Nextcloud (über Anmeldung)</strong></p>
+        <div class="btn-row" style="justify-content:flex-start;">
+          <a class="btn secondary small" href="https://sc1911heiligenstadt.github.io/ToolsUebersicht/">Zur Tools-Übersicht (an-/abmelden)</a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="config.js?v=1.0"></script>
+<script src="db.js?v=1.0"></script>
+<script src="app.js?v=1.0"></script>
+</body>
+</html>
