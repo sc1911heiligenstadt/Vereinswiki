@@ -13,8 +13,9 @@ Assistent das, statt zu raten.
 |---|---|
 | **Fragen** | Die Frage stellen und die Antwort mit Quellenangabe lesen |
 | **Dokumente** | Die Unterlagen, auf die geantwortet wird — hier werden neue hochgeladen |
-| **Gestellte Fragen** | Was schon gefragt wurde; oft steht die Antwort dort bereits |
-| **Einstellungen** | Verwaltung |
+| **Gestellte Fragen** | Wer wann was gefragt hat und ob eine Antwort gefunden wurde — Fragen ohne Antwort zeigen, welche Unterlage noch fehlt |
+| **Einstellungen** | Der Speicherort und der Weg zur An- und Abmeldung |
+| **Info** | Was die App tut, die Änderungen und der Datenschutz-Hinweis |
 
 ## Wie die Antwort entsteht
 
@@ -27,13 +28,26 @@ nichts hinterlegt ist.
 Was neu ins Wiki soll, muss also erst als Dokument hochgeladen werden — dann
 kann ab sofort danach gefragt werden.
 
+## Was hier nicht hineingehört
+
+Damit eine Frage beantwortet werden kann, **verlässt sie den Verein**: Sie geht
+zusammen mit den hinterlegten Unterlagen an den KI-Dienst. Deshalb gehören hier
+nur allgemeine Vereinsunterlagen hinein — Satzung, Ordnungen, Konzepte,
+Leitfäden. Keine Mitgliederlisten, Geburtsdaten, Gehälter oder Kontodaten, und
+auch keine Namen oder persönlichen Angaben in der Frage selbst.
+
+Jede gestellte Frage wird mit Name und Zeitpunkt protokolliert; aufgehoben
+werden die letzten 500. Einsehen und löschen kann das nur, wer Bearbeiten-Recht
+hat.
+
 ## Zugang
 
 Die Anmeldung läuft über die [Tools-Übersicht](https://sc1911heiligenstadt.github.io/ToolsUebersicht/) — dort einmal anmelden, danach ist dieses Werkzeug offen.
 
 Die Rechte gelten in drei Stufen: **Sehen** (fragen und Antworten lesen),
-**Bearbeiten** (Dokumente hochladen und pflegen) und **Administrieren** (Reiter
-*Einstellungen*). Wer welche Stufe hat, legt die Tools-Übersicht fest.
+**Bearbeiten** (Dokumente hochladen und pflegen, dazu der Reiter *Gestellte
+Fragen*) und **Administrieren** (Reiter *Einstellungen*). Wer welche Stufe hat,
+legt die Tools-Übersicht fest. Der Reiter *Info* ist für alle sichtbar.
 
 ## Lokal starten
 

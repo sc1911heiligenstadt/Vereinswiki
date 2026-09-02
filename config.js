@@ -2,64 +2,6 @@ const APP_VERSION = "1.0";
 
 const APP_CHANGELOG = [
   {
-    version: "1.4",
-    groups: [
-      {
-        title: "Der Reiter „Info“ erklärt jetzt, was die App wirklich tut",
-        items: [
-          "Dort stand bisher ein einzelner Satz. Jetzt steht da, wofür die einzelnen Reiter da sind, was die App mit den Eingaben macht und wo etwas anderes hingehört.",
-          "Am Funktionsumfang ändert sich nichts — nur an der Beschreibung."
-        ]
-      }
-    ]
-  },
-  {
-    version: "1.3",
-    groups: [
-      {
-        title: "Der Datenschutz-Hinweis sagt jetzt, dass deine Frage den Verein verlässt",
-        items: [
-          "Dort stand bisher nur, dass die Daten auf Servern in Deutschland liegen. Das stimmte für die gespeicherten Unterlagen — nicht für die Frage selbst: die geht zusammen mit den hinterlegten Dokumenten an einen KI-Dienst von Google, sonst gäbe es keine Antwort.",
-          "Der Hinweis sagt das jetzt offen, samt der Bitte, keine Namen und keine persönlichen Angaben in die Frage zu schreiben.",
-          "An der Funktion ändert sich nichts — nur der Text war ungenau."
-        ]
-      }
-    ]
-  },
-  {
-    version: "1.2",
-    groups: [
-      {
-        title: "Neuer Reiter „Gestellte Fragen“",
-        items: [
-          "Alle an das Wiki gestellten Fragen stehen jetzt in einem eigenen Reiter — mit Name, Zeitpunkt und der Angabe, ob eine Antwort gefunden wurde.",
-          "Fragen ohne Antwort sind besonders markiert: sie zeigen, welche Unterlage im Wiki noch fehlt.",
-          "Mitgeschrieben werden auch die Fragen, die über den Reiter „Feedback & Hilfe“ der Tools-Übersicht gestellt werden.",
-          "Ein Suchfeld durchsucht Fragen und Namen. Einzelne Einträge oder der ganze Verlauf lassen sich löschen.",
-          "Aufgehoben werden die letzten 500 Fragen; ältere fallen automatisch heraus."
-        ]
-      },
-      {
-        title: "Wer darf was",
-        items: [
-          "Den Reiter sehen und den Verlauf löschen darf nur, wer Bearbeiten-Recht für das Toolbox Wiki hat — geprüft wird das auf dem Server, nicht nur durch Ausblenden.",
-          "Ein Hinweis unter dem Frage-Feld sagt jedem, dass seine Frage mit Namen festgehalten wird."
-        ]
-      }
-    ]
-  },
-  {
-    version: "1.1",
-    groups: [
-      {
-        title: "Am Handy",
-        items: [
-          "Bisher brach die Reiterleiste selbst um, die rechte Reiter-Gruppe darin aber nicht: Sie rutschte als ein Stück in die zweite Zeile und lief dort weiter über den rechten Rand hinaus. Jetzt bricht auch sie um, sobald sie zu breit wird. Zu sehen ist das nur, wenn genug Reiter nebeneinanderstehen — bis dahin sieht alles aus wie bisher."
-        ]
-      }
-    ]
-  },
-  {
     version: "1.0",
     groups: [
       {
@@ -79,10 +21,21 @@ const APP_CHANGELOG = [
         ]
       },
       {
+        title: "Gestellte Fragen",
+        items: [
+          "Alle an das Wiki gestellten Fragen stehen in einem eigenen Reiter — mit Name, Zeitpunkt und der Angabe, ob eine Antwort gefunden wurde.",
+          "Fragen ohne Antwort sind besonders markiert: sie zeigen, welche Unterlage im Wiki noch fehlt.",
+          "Mitgeschrieben werden auch die Fragen, die über den Reiter „Feedback & Hilfe“ der Tools-Übersicht gestellt werden.",
+          "Ein Suchfeld durchsucht Fragen und Namen. Einzelne Einträge oder der ganze Verlauf lassen sich löschen.",
+          "Aufgehoben werden die letzten 500 Fragen; ältere fallen automatisch heraus.",
+          "Ein Hinweis unter dem Frage-Feld sagt jedem, dass seine Frage mit Namen festgehalten wird."
+        ]
+      },
+      {
         title: "Wer darf was",
         items: [
           "Sehen: fragen und alle hinterlegten Dokumente lesen.",
-          "Bearbeiten: zusätzlich Dokumente hochladen und löschen.",
+          "Bearbeiten: zusätzlich Dokumente hochladen und löschen sowie der Reiter „Gestellte Fragen“ samt Löschen einzelner Einträge und des ganzen Verlaufs. Geprüft wird das auf dem Server, nicht nur durch Ausblenden.",
           "Administrieren: der Reiter „Einstellungen“ mit dem Speicherort.",
           "Der Reiter „Info“ ist für alle sichtbar."
         ]
@@ -92,7 +45,7 @@ const APP_CHANGELOG = [
         items: [
           "Gedacht für allgemeine Vereinsunterlagen: Satzung, Ordnungen, Konzepte, Leitfäden.",
           "Ausdrücklich nicht für personenbezogene Daten — keine Mitgliederlisten, Geburtsdaten, Gehälter oder Kontodaten.",
-          "Der Grund: die Unterlagen werden zur Beantwortung an einen externen Sprachdienst übergeben. Was dort nicht hingehört, gehört auch nicht in dieses Werkzeug."
+          "Der Grund: damit eine Frage beantwortet werden kann, verlässt sie den Verein. Sie geht zusammen mit den hinterlegten Unterlagen an einen KI-Dienst von Google. Was dort nicht hingehört, gehört auch nicht in dieses Werkzeug — deshalb bitte auch keine Namen und keine persönlichen Angaben in die Frage schreiben."
         ]
       },
       {
@@ -107,6 +60,7 @@ const APP_CHANGELOG = [
         items: [
           "Die Dokumente liegen in der Vereins-Nextcloud und sind nur für berechtigte, angemeldete Nutzer erreichbar. Geprüft wird das auf dem Server.",
           "Zugang über die zentrale Anmeldung der Tools-Übersicht — ein eigenes Passwort braucht es nicht.",
+          "Der Schlüssel für den Sprachdienst liegt im Worker des Vereins, nie im Browser.",
           "Ändern zwei Geräte gleichzeitig denselben Stand, erkennt die App das, statt still zu überschreiben."
         ]
       }
