@@ -2,7 +2,8 @@
 //
 // Ausfuehrliche Fassung: neben READMEs und Kacheltexten kommen jetzt auch
 // - der Info-Absatz aus index.html ("Was das Werkzeug tut"),
-// - saemtliche Funktionsgruppen aus dem 1.0-Eintrag des Info-Reiters,
+// - die Funktionsliste des Info-Reiters (APP_FUNKTIONEN; ersatzweise, wenn
+//   eine Anwendung keine hat, der Changelog),
 // - die technischen Abschnitte (fuer Fragen wie "wo liegen die Daten"),
 // - ein Stichwortregister ganz vorn
 // mit hinein. Die Groessengrenze des Wikis liegt bei 10 MB, es ist also
@@ -112,15 +113,44 @@ function infoAbsatz(repo) {
   return "";
 }
 
-// ------------------------------- Funktionsgruppen aus dem Info-Reiter (1.0)
-// Schneidet das Changelog-Array per Klammerzaehlung aus dem Quelltext und
-// wertet NUR dieses aus. Die ganze Datei auszufuehren scheitert, sobald das
-// Skript beim Laden ans DOM oder an Firebase geht -- genau das tun die
-// Inline-Skripte von Spiele, Trainerversammlung und Vereinsbudget.
+// -------------------------- Funktionsliste aus dem Info-Reiter der Anwendung
+// Seit dem 07.09.2026 fuehrt jede App der Flotte eine Konstante
+// APP_FUNKTIONEN. Sie beschreibt den ZUSTAND ("die Kacheln lassen sich
+// anordnen") und ist genau das, was der Info-Reiter der App anzeigt.
+// APP_CHANGELOG beschreibt weiterhin die HISTORIE ("lassen sich JETZT
+// anordnen"); es wird gepflegt, aber nirgends mehr angezeigt. Fuers Wiki
+// zaehlt der Zustand -- der Changelog ist nur noch der Notbehelf fuer
+// Anwendungen ohne Funktionsliste.
+//
+// Formatunterschied, deshalb zwei Auswertungen:
+//   APP_FUNKTIONEN  flach          [{title, items:[...]}, ...]
+//   APP_CHANGELOG   je Version     [{version, groups:[{title, items}]}, ...]
+//
+// Die Namen weichen in einigen Anwendungen ab:
+//   fahrtenbuch        APP_FUNKTIONEN_EXTERN fuer die Seite ohne Konto
+//   vereinsverwaltung  BUCHHALTUNG_FUNKTIONEN sowie ANTRAG_/NACHWUCHS_/
+//                      KODEX_FUNKTIONEN in db-antrag.js; ihr Changelog heisst
+//                      nur CHANGELOG bzw. ANTRAG_CHANGELOG
+//   kadermanager       REG_FUNKTIONEN, inline in registrieren.html
+//   agelan             nur FUNKTIONEN
+// Reihenfolge zaehlt: APP_FUNKTIONEN steht vorn, damit die Hauptliste einer
+// Anwendung vor ihren Nebenseiten landet.
+const FUNK_NAMEN = ["APP_FUNKTIONEN", "APP_FUNKTIONEN_EXTERN", "BUCHHALTUNG_FUNKTIONEN",
+                    "ANTRAG_FUNKTIONEN", "NACHWUCHS_FUNKTIONEN", "KODEX_FUNKTIONEN",
+                    "REG_FUNKTIONEN", "FUNKTIONEN"];
+const CL_NAMEN = ["APP_CHANGELOG", "ANTRAG_CHANGELOG", "NACHWUCHS_CHANGELOG",
+                  "KODEX_CHANGELOG", "CHANGELOG"];
+const NL = String.fromCharCode(10);
+
+// Schneidet das Array per Klammerzaehlung aus dem Quelltext und wertet NUR
+// dieses aus. Die ganze Datei auszufuehren scheitert, sobald das Skript beim
+// Laden ans DOM oder an Firebase geht -- genau das tun die Inline-Skripte von
+// Spiele, Trainerversammlung und Vereinsbudget.
 function arrayAusschneiden(txt, name) {
   // Ohne regulaeren Ausdruck: den Namen als ganzes Wort suchen, dann pruefen,
   // dass dahinter nur "=" und Leerraum bis zur oeffnenden Klammer steht. So
-  // trifft "CHANGELOG" nicht das Innere von "APP_CHANGELOG".
+  // trifft "CHANGELOG" nicht das Innere von "APP_CHANGELOG" und "FUNKTIONEN"
+  // nicht das Innere von "APP_FUNKTIONEN" oder "APP_FUNKTIONEN_EXTERN".
   let start = -1;
   for (let i = 0; ; ) {
     const t = txt.indexOf(name, i);
@@ -152,28 +182,85 @@ function arrayAusschneiden(txt, name) {
   return null;
 }
 
-function changelogGruppen(repo) {
-  const kandidaten = [
+function arrayLesen(txt, name) {
+  const roh = arrayAusschneiden(txt, name);
+  if (!roh) return null;
+  try {
+    const ctx = {}; vm.createContext(ctx);
+    const a = vm.runInContext("(" + roh + ")", ctx, { timeout: 5000 });
+    return Array.isArray(a) && a.length ? a : null;
+  } catch (e) { return null; }
+}
+
+// Dieselben Kandidaten wie bisher -- config.js, app.js, js/render-info.js,
+// danach die HTML-Seiten des Wurzelverzeichnisses. Neu am Ende die uebrigen
+// .js im Wurzelverzeichnis: dort liegen die Listen der Nebenseiten, etwa
+// ANTRAG_/NACHWUCHS_/KODEX_FUNKTIONEN in vereinsverwaltung/db-antrag.js.
+function quellDateien(repo) {
+  let wurzelJs = [];
+  try {
+    wurzelJs = fs.readdirSync("E:/" + repo)
+      .filter((f) => /\.js$/i.test(f))
+      .sort((a, b) => a.localeCompare(b))
+      .map((f) => "E:/" + repo + "/" + f);
+  } catch (_) { wurzelJs = []; }
+  const alle = [
     "E:/" + repo + "/config.js",
     "E:/" + repo + "/app.js",
     "E:/" + repo + "/js/render-info.js",
     ...htmlSeiten(repo).map((f) => "E:/" + repo + "/" + f),
+    ...wurzelJs,
   ];
-  for (const p of kandidaten) {
-    if (!fs.existsSync(p)) continue;
+  return alle.filter((p, i) => alle.indexOf(p) === i && fs.existsSync(p));
+}
+
+// Flache Liste [{title, items}] -- das Format von APP_FUNKTIONEN. Gruppen mit
+// gleichem Titel nur einmal, damit eine in mehreren Dateien wiederholte Liste
+// den Abschnitt nicht doppelt.
+function gruppenAnhaengen(liste, zeilen, gesehen) {
+  for (const g of liste) {
+    if (typeof g === "string") {
+      const t = g.replace(/<[^>]+>/g, "").trim();
+      if (!t || gesehen.has("- " + t.toLowerCase())) continue;
+      gesehen.add("- " + t.toLowerCase());
+      zeilen.push("- " + t);
+      continue;
+    }
+    if (!g || !g.title) continue;
+    const schluessel = String(g.title).trim().toLowerCase();
+    if (gesehen.has(schluessel)) continue;
+    gesehen.add(schluessel);
+    zeilen.push("", String(g.title));
+    for (const it of (g.items || [])) {
+      if (typeof it === "string") zeilen.push("- " + it.replace(/<[^>]+>/g, ""));
+    }
+  }
+}
+
+function funktionsGruppen(repo) {
+  const zeilen = [], gesehen = new Set();
+  for (const p of quellDateien(repo)) {
     const txt = fs.readFileSync(p, "utf8");
-    const roh = arrayAusschneiden(txt, "APP_CHANGELOG") || arrayAusschneiden(txt, "CHANGELOG");
-    if (!roh) continue;
-    let cl;
-    try {
-      const ctx = {}; vm.createContext(ctx);
-      cl = vm.runInContext("(" + roh + ")", ctx, { timeout: 5000 });
-    } catch (e) { continue; }
-    if (!Array.isArray(cl) || !cl.length) continue;
+    for (const name of FUNK_NAMEN) {
+      const liste = arrayLesen(txt, name);
+      if (liste) gruppenAnhaengen(liste, zeilen, gesehen);
+    }
+  }
+  return zeilen.join(NL).trim();
+}
+
+// Notbehelf: die Historie, wenn eine Anwendung keine Funktionsliste hat.
+// Wie bisher gewinnt hier die erste Datei mit einem lesbaren Changelog.
+function changelogGruppen(repo) {
+  for (const p of quellDateien(repo)) {
+    const txt = fs.readFileSync(p, "utf8");
+    let cl = null;
+    for (const name of CL_NAMEN) { cl = arrayLesen(txt, name); if (cl) break; }
+    if (!cl) continue;
 
     if (typeof cl[0] === "string") {
       return cl.filter((x) => typeof x === "string")
-               .map((x) => "- " + x.replace(/<[^>]+>/g, "")).join(String.fromCharCode(10));
+               .map((x) => "- " + x.replace(/<[^>]+>/g, "")).join(NL);
     }
     const zeilen = [];
     for (const b of cl) {
@@ -190,10 +277,18 @@ function changelogGruppen(repo) {
         for (const it of b.punkte) if (typeof it === "string") zeilen.push("- " + it);
       }
     }
-    const erg = zeilen.join(String.fromCharCode(10)).trim();
+    const erg = zeilen.join(NL).trim();
     if (erg) return erg;
   }
   return "";
+}
+
+// Erst der Zustand, ersatzweise die Historie.
+function kannListe(repo) {
+  const funk = funktionsGruppen(repo);
+  if (funk) return { text: funk, quelle: "funktionen" };
+  const cl = changelogGruppen(repo);
+  return { text: cl, quelle: cl ? "changelog" : "" };
 }
 
 // ---------------------------------------------------------------- Register
@@ -300,13 +395,18 @@ teile.push(
 3. DIE WERKZEUGE IM EINZELNEN
 ==========================================================================`);
 
-let mitChangelog = 0, mitInfo = 0, mitTechnik = 0;
+let mitFunktionen = 0, mitInfo = 0, mitTechnik = 0;
+// Anwendungen, die keine Funktionsliste haben und auf den Changelog zurueckfallen
+const rueckfaller = [], ohneBeides = [];
 for (const r of mitKachel) {
   const k = kachel.get(r);
   const { fach, technik } = readmeTeile("E:/" + r + "/README.md");
   const info = infoAbsatz(r);
-  const funk = changelogGruppen(r);
-  if (funk) mitChangelog++;
+  const kann = kannListe(r);
+  const funk = kann.text;
+  if (kann.quelle === "funktionen") mitFunktionen++;
+  else if (kann.quelle === "changelog") rueckfaller.push(k.name + " [" + r + "]");
+  else ohneBeides.push(k.name + " [" + r + "]");
   if (info) mitInfo++;
   if (technik) mitTechnik++;
 
@@ -332,7 +432,11 @@ for (const r of ohneKachel) {
   if (!fach && !technik) continue;
   const titel = (fs.readFileSync("E:/" + r + "/README.md", "utf8").split(/\r?\n/)
     .find((z) => /^#\s/.test(z)) || "# " + r).replace(/^#\s*/, "").replace(/^[^\p{L}]+/u, "").trim();
-  const funk = changelogGruppen(r);
+  const kann = kannListe(r);
+  const funk = kann.text;
+  if (kann.quelle === "funktionen") mitFunktionen++;
+  else if (kann.quelle === "changelog") rueckfaller.push(titel + " [" + r + "]");
+  else ohneBeides.push(titel + " [" + r + "]");
   const st = [
 `--------------------------------------------------------------------------
 WEITERES: ${titel.toUpperCase()}
@@ -362,6 +466,10 @@ fs.writeFileSync(ziel, text, "utf8");
 
 console.log("geschrieben:", ziel);
 console.log("Werkzeuge mit Kachel:", mitKachel.length, "| weitere:", sonstige.length);
-console.log("davon mit Funktionsliste:", mitChangelog, "| mit Info-Absatz:", mitInfo, "| mit Technik:", mitTechnik);
+console.log("mit Funktionsliste (APP_FUNKTIONEN):", mitFunktionen, "von", mitKachel.length + sonstige.length,
+            "| mit Info-Absatz:", mitInfo, "| mit Technik:", mitTechnik);
+console.log("ersatzweise aus dem Changelog:", rueckfaller.length,
+            rueckfaller.length ? "— " + rueckfaller.join("; ") : "");
+if (ohneBeides.length) console.log("ganz ohne Liste:", ohneBeides.length, "— " + ohneBeides.join("; "));
 console.log("Registereintraege:", REGISTER.length);
 console.log("Groesse:", (Buffer.byteLength(text, "utf8") / 1024).toFixed(0), "KB von 10240 KB");

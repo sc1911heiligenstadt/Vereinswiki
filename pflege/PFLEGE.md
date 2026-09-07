@@ -27,7 +27,8 @@ sonst stehen zwei Stände nebeneinander und das Wiki zitiert womöglich den alte
 | `<repo>/README.md` | die fachlichen Abschnitte (Reiter, Rechte, Abläufe) |
 | `<repo>/README.md`, Technik-Abschnitte | eigener Block „Technischer Hintergrund" |
 | `<repo>/index.html`, `#tab-info` | der Absatz, den ein Nutzer unter *Info* liest |
-| `APP_CHANGELOG` bzw. `CHANGELOG` | die vollständige Funktionsliste je Werkzeug |
+| `APP_FUNKTIONEN` (Namensvarianten je App) | die Funktionsliste je Werkzeug — was es heute kann |
+| `APP_CHANGELOG` bzw. `CHANGELOG` | nur ersatzweise, wenn ein Werkzeug keine Funktionsliste führt |
 | Register im Skript, von Hand gepflegt | Stichwort → Werkzeug |
 
 ## Das Stichwortregister ist der wichtigste Teil
@@ -55,8 +56,27 @@ Trainerversammlung-Anmeldung, Vereinsbudget) und haben teils gar keine
 greift beim Laden ans DOM oder an Firebase. Deshalb wird die Liste per
 **Klammerzählung aus dem Quelltext geschnitten** und nur sie ausgewertet.
 
+**Funktionsliste vor Changelog.** Seit dem 07.09.2026 beschreibt `APP_FUNKTIONEN`
+den ZUSTAND („die Kacheln lassen sich anordnen") und ist das, was der Info-Reiter
+der App zeigt. `APP_CHANGELOG` beschreibt weiter die HISTORIE („lassen sich JETZT
+anordnen"), wird gepflegt, aber nirgends mehr angezeigt. Das Skript liest deshalb
+zuerst die Funktionsliste und fällt nur ersatzweise auf den Changelog zurück —
+sonst steht im Wiki etwas anderes als in der App.
+
+**Die Namen weichen ab.** `APP_FUNKTIONEN_EXTERN` (Fahrtenbuch, Seite ohne Konto),
+`BUCHHALTUNG_FUNKTIONEN` und `ANTRAG_`/`NACHWUCHS_`/`KODEX_FUNKTIONEN`
+(Vereinsverwaltung, teils in `db-antrag.js`), `REG_FUNKTIONEN` (Kadermanager,
+inline in `registrieren.html`), nur `FUNKTIONEN` (AgeLan). Alle stehen als
+`FUNK_NAMEN` bzw. `CL_NAMEN` im Skript; eine neue Variante gehört dort ergänzt.
+Gesucht wird in `config.js`, `app.js`, `js/render-info.js`, danach in den
+HTML-Seiten und zuletzt in den übrigen `.js` des Wurzelverzeichnisses.
+
+**Formatunterschied:** `APP_FUNKTIONEN` ist flach — `[{title, items:[...]}, ...]`.
+`APP_CHANGELOG` ist je Version geschachtelt — `[{version, groups:[{title, items}]}, ...]`.
+
 **Zwei Werkzeuge führen eine flache Liste von Sätzen** statt Versionsblöcken
-(Vereinsbudget, Trainerversammlung). Beide Formen werden unterstützt.
+(Vereinsbudget, Trainerversammlung). Das betrifft ihren Changelog; beide Formen
+werden unterstützt.
 
 **`const` landet nicht auf dem `vm`-Kontextobjekt.** Wer `APP_CHANGELOG` nach
 `runInContext` vom Kontext lesen will, bekommt `undefined` — der Wert muss als
@@ -80,9 +100,13 @@ kaputter Ausdruck liefert auch 0. Dafür denselben Befehl auf einen Testtext mit
 erfundener Adresse, Nummer und IBAN loslassen; dort müssen Treffer kommen.
 
 Das Skript meldet am Ende außerdem, wie viele Werkzeuge eine Funktionsliste, einen
-Info-Absatz und einen Technik-Block bekommen haben. **Stehen diese Zahlen unter der
+Info-Absatz und einen Technik-Block bekommen haben, und nennt die Rückfaller
+namentlich — die Werkzeuge, die mangels `APP_FUNKTIONEN` nur den Changelog
+bekommen haben, und die ganz ohne Liste. **Stehen diese Zahlen unter der
 Zahl der Werkzeuge, fehlt irgendwo etwas** — dann nachsehen, welches Werkzeug
-leer ausgegangen ist, statt die Datei so hochzuladen.
+leer ausgegangen ist, statt die Datei so hochzuladen. Ein Rückfaller ist ein
+Auftrag: entweder die App bekommt eine `APP_FUNKTIONEN`, oder ihr Name fehlt in
+`FUNK_NAMEN`.
 
 ## Wenn ein neues Werkzeug dazukommt
 
