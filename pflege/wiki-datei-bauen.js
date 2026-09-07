@@ -99,8 +99,17 @@ function infoAbsatz(repo) {
     // des Attributs als sichtbarer Text im Ergebnis.
     const tagEnde = html.indexOf(">", treffer);
     const start = tagEnde < 0 ? treffer : tagEnde + 1;
-    const bis = html.indexOf("Änderungen", start);
-    const stueck = html.slice(start, bis > 0 ? bis : start + 6000);
+    // Die frueheste der bekannten Grenzen zaehlt: die Ueberschrift
+    // "Aenderungen" und der Beginn des ersten <script>. Ohne die zweite
+    // Grenze lief der Ausschnitt bei fuenf Anwendungen mit inline geschrie-
+    // benem Info-Reiter in den Quelltext der Seite hinein (am schlimmsten
+    // sc1911-anmeldung mit der firebaseConfig und sc-heiligenstadt-budget)
+    // und landete so als "Info" in der Ausgabe.
+    const aenderungen = html.indexOf("Änderungen", start);
+    const skript = html.indexOf("<script", start);
+    let bis = aenderungen > 0 ? aenderungen : start + 6000;
+    if (skript > 0 && skript < bis) bis = skript;
+    const stueck = html.slice(start, bis);
     const text = stueck
       .replace(/<h2[\s\S]*?<\/h2>/gi, " ")
       .replace(/<[^>]+>/g, " ")
