@@ -151,6 +151,7 @@ function startApp() {
 
 function renderAll() {
   renderVersionInfo();
+  renderFunktionen();
   renderUploadPermission();
   applyAdminTabs();
   renderDokumente();
@@ -186,16 +187,33 @@ function setupNav() {
 function switchTab(tab) {
   document.querySelectorAll("nav button").forEach((b) => b.classList.toggle("active", b.dataset.tab === tab));
   document.querySelectorAll(".tab-section").forEach((s) => s.classList.toggle("active", s.id === "tab-" + tab));
-  if (tab === "info") renderVersionInfo();
+  if (tab === "info") { renderVersionInfo(); renderFunktionen(); }
   // Erst beim Öffnen laden: das Protokoll interessiert nur wenige, jeder
   // Seitenaufruf soll es nicht mitschleppen.
   if (tab === "verlauf" && verlaufFragen === null) ladeVerlauf();
 }
 
+// Was die App kann -- die Karte "Funktionen" im Info-Reiter. Nutzt dieselben
+// CSS-Klassen wie frueher die Aenderungsliste (.changelog-group, .cg-title,
+// .cg-items), damit beide Karten gleich aussehen.
+function renderFunktionen() {
+  const container = document.getElementById("funktionen-list");
+  if (!container) return;
+  container.innerHTML = APP_FUNKTIONEN.map((g) => `
+    <div class="changelog-group">
+      <div class="cg-title">${escapeHtml(g.title)}</div>
+      <ul class="cg-items">${g.items.map((i) => `<li>${escapeHtml(i)}</li>`).join("")}</ul>
+    </div>
+  `).join("");
+}
+
+// Die Aenderungsliste steht seit 07.09.2026 NICHT mehr im Info-Reiter: dort
+// stehen nur noch die Funktionen der App. APP_CHANGELOG bleibt in config.js
+// gepflegt und wird weitergeschrieben -- er ist die Quelle fuer die grosse
+// Anleitung und fuer die Neuigkeiten auf der Tools-Uebersicht. Diese Funktion
+// steigt darum still aus, wenn es das Ziel nicht mehr gibt, statt beim
+// Seitenstart mit einem Fehler abzubrechen.
 function renderVersionInfo() {
-  document.querySelectorAll("#version-badge, #version-badge-2").forEach((el) => {
-    if (el) el.textContent = "v" + APP_VERSION;
-  });
   const list = document.getElementById("changelog-list");
   if (!list) return;
   list.innerHTML = APP_CHANGELOG.map((entry) => `

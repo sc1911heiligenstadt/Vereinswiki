@@ -263,3 +263,8 @@ nav .nav-right { margin-left: auto; display: flex; flex-wrap: wrap; gap: inherit
 @media (max-width: 820px) {
   input, select, textarea { font-size: 16px !important; }
 }
+
+/* Die Karte "Funktionen" im Info-Reiter teilt sich die Klassen mit der frueheren
+   Aenderungsliste; Abstand und Schriftgroesse kommen von hier, weil die Klasse
+   .changelog-entry -- an der die Groesse haengt -- dort fehlt. */
+#funktionen-list { display: flex; flex-direction: column; gap: 18px; font-size: 13px; }
